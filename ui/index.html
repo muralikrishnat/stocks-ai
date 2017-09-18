@@ -5,6 +5,45 @@
     <title></title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        img {
+            width: 50px;
+        }
+        
+        table {
+            border-collapse: collapse;
+        }
+        
+        table tr {
+            border-bottom: 1px solid #541236;
+        }
+        
+        .p-l-5 {
+            padding-left: 5px;
+        }
+        
+        .p-5 {
+            padding: 5px;
+        }
+        
+        .bold {
+            font-weight: bold;
+        }
+        
+        .greenFont {
+            color: green;
+        }
+        
+        .redFont {
+            color: red;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,79 +61,38 @@
                 contentType: 'application/json',
                 dataType: 'json'
             }).then((resp) => {
-                sharesHashObj[filePath] = resp.shares;
+                if (sharesHashObj) {
+                    sharesHashObj[filePath] = resp.shares;
+                }
                 return resp.shares;
             })
         };
-        var manager = (function() {
-            function C() {
-
-                this.shares = [];
-
-                this.getShares = function(filePath) {
-                    var prm = {
-                        then: (fn) => {
-
-                        }
-                    };
-
-
-                    return prm;
-                };
-                this.filter = function(filePath) {
-                    return this;
-                };
-                this.combine = function(filePath) {
-                    return this;
-                };
-            };
-
-            return new C();
-        })();
-
-        var getFolderFiles = function() {
-            return $.ajax({
-                type: "POST",
-                url: 'http://localhost:3435/api',
-                data: JSON.stringify({
-                    folderName: '/files/rediff/total-nse',
-                    action: 'GET-FOLDER'
-                }),
-                success: () => {},
-                contentType: 'application/json',
-                dataType: 'json'
+        var shares = [];
+        getFile('strategy-results/final-stocks-80-100.json').then((sharesresp) => {
+            shares = sharesresp;
+            var table = $('<table/>');
+            var $tr = $('<tr/>');
+            $tr.append('<td> </td>');
+            $tr.append('<td>Name</td>');
+            $tr.append('<td>Price</td>');
+            for (var i = 0; i < 10; i++) {
+                $tr.append('<td></td>');
+            }
+            table.append($tr);
+            shares.forEach(s => {
+                var $tr = $('<tr/>');
+                $tr.append('<td> <img src="' + s.meter + '" /></td>');
+                $tr.append('<td>' + s.name + '</td>');
+                $tr.append('<td class="p-5 bold">' + s.lastPrice + '</td>');
+                if (s.hdata) {
+                    for (var i = 0; i < 10; i++) {
+                        $tr.append('<td class="p-5 ' + s.hdata[i]['className'] + '">' + s.hdata[i]['change'] + '</td>');
+                    }
+                }
+                table.append($tr);
             });
-        };
-        var files = [],
-            sharesHash = {},
-            shares = [],
-            shares80_100_Hash = {},
-            shares80_100 = [];
-        getFolderFiles().then(resp => {
-            files = resp.data;
-            return Promise.all(files.map(f => {
-                return getFile('rediff/total-nse/' + f, sharesHash);
-            }));
-        }).then(() => {
-            Object.keys(sharesHash).forEach(f => {
-                sharesHash[f].forEach(d => {
-                    shares.push(d);
-                });
-            });
-            return getFile('strategy-results/final-stocks-80-100.json', shares80_100_Hash);
-        }).then(() => {
-            Object.keys(shares80_100_Hash).forEach(f => {
-                shares80_100_Hash[f].forEach(d => {
-                    shares80_100.push(d);
-                    $('.shares-to-check').append('<div>' + d.name + ' ; ' + d.symbol + '</div>')
-                });
-            });
-
-            return shares80_100;
-        }).then((sharesToCheck) => {
-            console.log(sharesToCheck);
-        });
-
+            $('body').append(table);
+        })
     </script>
 </body>
 
