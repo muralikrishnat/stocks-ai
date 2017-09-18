@@ -1,0 +1,22 @@
+{
+  "name": "stocks-ai",
+  "version": "1.0.0",
+  "description": "Stocks Finder",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muralikrishnat/stocks-ai.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/muralikrishnat/stocks-ai/issues"
+  },
+  "homepage": "https://github.com/muralikrishnat/stocks-ai#readme",
+  "devDependencies": {
+    "selenium-webdriver": "^3.5.0"
+  }
+}
