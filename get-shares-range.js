@@ -54,18 +54,6 @@ var getShares = function() {
         }
     });
     $('body').append('<div class="share-80-100">' + JSON.stringify(shares) + '</div>');
-
-    // $.ajax({
-    //     type: "POST",
-    //     url: 'http://localhost:6589/api',
-    //     data: JSON.stringify({
-    //         fileName: 'strategy-results/final-stocks-80-100.json',
-    //         shares: shares
-    //     }),
-    //     success: () => {},
-    //     contentType: 'application/json',
-    //     dataType: 'json'
-    // });
 };
 
 var sharesWithNseCodes = [];
@@ -218,9 +206,13 @@ var compareWithRediff = function() {
         return {};
     });
 };
-
+var from = 40,
+    to = 50,
+    page = 1;
+var tDate = new Date();
+var fileName = 'final-stocks-' + from + '-' + to + '-' + page + '-' + (tDate.getDay() + '-' + tDate.getMonth() + '-' + tDate.getFullYear()) + '.json';
 try {
-    driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|industry::a|equityType::a|exchange::46|last::70,100%3Ceq_market_cap;1').then(function() {
+    driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|industry::a|equityType::a|exchange::46|last::' + from + ',' + to + '%3Ceq_market_cap;' + page).then(function() {
         return driver.executeScript(getShares);
     }).then(waitForCodeRange).then(function() {
         return pickNextStep().then(() => {
@@ -236,7 +228,7 @@ try {
         });
 
         return saveFile(
-            path.join(__dirname, 'files/strategy-results/final-stocks-80-100.json'),
+            path.join(__dirname, 'files/strategy-results/' + fileName),
             JSON.stringify({ shares: sharesToCheck })
         );
     }).then(() => {
@@ -263,13 +255,15 @@ try {
                 });
 
                 return saveFile(
-                    path.join(__dirname, 'files/strategy-results/final-stocks-80-100.json'),
+                    path.join(__dirname, 'files/strategy-results/' + fileName),
                     JSON.stringify({ shares: sharesToCheck })
                 );
             });
         });
     }).then(() => {
         console.log('END ', sharesToCheck.length);
+        driver.close();
+        //return driver.get('http://localhost:3435?from=' + from + '&to=' + to + '&page=' + page);
     });
 
 
