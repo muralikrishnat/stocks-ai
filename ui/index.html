@@ -11,50 +11,62 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         img {
             width: 50px;
         }
-
+        
         table {
             border-collapse: collapse;
         }
-
-        table tr {
+        
+        table .bottom-border {
             border-bottom: 1px solid #541236;
         }
-
+        
         .p-l-5 {
             padding-left: 5px;
         }
-
+        
+        .m-l-5 {
+            margin-left: 5px;
+        }
+        
         .p-5 {
             padding: 5px;
         }
-
+        
         .bold {
             font-weight: bold;
         }
-
+        
         .greenFont {
             color: green;
         }
-
+        
         .redFont {
             color: red;
         }
     </style>
 </head>
 
-<body>
+<body class="p-5">
     <div>
-        <div class="shares-to-check"></div>
+        <div> /kitto-results/2017/8/22/final-stocks-40-60-1-tmp.json</div>
+        <div>
+            <input value="/kitto-results/2017/8/22/final-stocks-40-60-1-tmp.json" style="width:400px;padding:5px;" type="text" class="file-to-fetch" /> 
+            <input type="button" onclick="fetchSharesFromFile()" value=" Fetch Shares " />
+            <input type="button" onclick="clearData()" value=" Clear Shares " />
+        </div>
+
+    </div>
+    <div class="shares-to-check">
     </div>
 
     <script src="js/vendor/jquery-3.2.1.min.js"></script>
 
     <script>
-        var getFile = function (filePath, sharesHashObj) {
+        var getFile = function(filePath, sharesHashObj) {
             return $.ajax({
                 type: "GET",
                 url: 'http://localhost:3435/files/' + filePath,
@@ -78,35 +90,62 @@
                     }
                 });
             }
-
         }
-        getFile('strategy-results/' + fileName).then((sharesresp) => {
-            shares = sharesresp;
-            var table = $('<table/>');
-            var $tr = $('<tr/>');
-            $tr.append('<td> </td>');
-            $tr.append('<td>Name</td>');
-            $tr.append('<td>Price</td>');
-            for (var i = 0; i < 10; i++) {
-                $tr.append('<td></td>');
-            }
-            table.append($tr);
-            shares.forEach(s => {
-                var $tr = $('<tr/>');
-                $tr.append('<td> <img src="' + s.meter + '" /></td>');
-                $tr.append('<td>' + s.name + '</td>');
-                $tr.append('<td class="p-5 bold">' + s.lastPrice + '</td>');
-                if (s.hdata) {
+
+        function fetchSharesFromFile() {
+            if ($('.file-to-fetch').val().length > 0) {
+                getFile($('.file-to-fetch').val()).then((sharesresp) => {
+                    shares = sharesresp;
+                    var table = $('<table/>');
+                    var $trhead = $('<tr/>');
+                    $trhead.append('<td colspan="13"> </td>');
+
+                    table.append($trhead);
+
+                    var $tr = $('<tr/>');
+                    $tr.append('<td> </td>');
+                    $tr.append('<td>Name</td>');
+                    $tr.append('<td>Price</td>');
                     for (var i = 0; i < 10; i++) {
-                        $tr.append('<td class="p-5 ' + s.hdata[i]['className'] + '">' + s.hdata[i][
-                            'change'
-                        ] + '</td>');
+                        $tr.append('<td></td>');
                     }
-                }
-                table.append($tr);
-            });
-            $('body').append(table);
-        })
+                    table.append($tr);
+                    shares.forEach(s => {
+                        var $tr = $('<tr/>');
+                        $tr.append('<td> <img src="' + s.meter + '" /></td>');
+                        $tr.append('<td>' + s.name + '</td>');
+                        $tr.append('<td class="p-5 bold">' + s.lastPrice + '</td>');
+                        if (s.hdata) {
+                            for (var i = 0; i < 10; i++) {
+                                $tr.append('<td class="p-5 ' + s.hdata[i]['className'] + '">' + s.hdata[i]['change'] + '</td>');
+                            }
+                        }
+                        table.append($tr);
+                        var $tr2 = $('<tr class="bottom-border"/>');
+                        var secondHtml = '<td >' + s.nseCode + '</td>';
+                        secondHtml += '<td >' + s.marketCap + '</td>';
+                        secondHtml += '<td >' + s.volume + '</td>';
+                        secondHtml += '<td >' + s.daily + '</td>';
+                        secondHtml += '<td >' + s.week + '</td>';
+                        secondHtml += '<td >' + s.month + '</td>';
+                        secondHtml += '<td >' + s.year + '</td>';
+                        secondHtml += '<td >' + s['3year'] + '</td>';
+                        secondHtml += '<td >' + s['group'] + '</td>';
+
+                        secondHtml += '<td ><a href="https://in.investing.com' + s.link + '" target="_blank">I</a></td>';
+                        secondHtml += '<td ><a href="' + s.rlink + '" target="_blank">R</a></td>';
+
+                        $tr2.append('<td colspan="13"><table style="width:100%;"><tr>' + secondHtml +
+                            '</tr></table></td>');
+                        table.append($tr2);
+                    });
+                    $('.shares-to-check').append(table);
+                });
+            }
+        }
+        var clearData = () => {
+            $('.shares-to-check').html('');
+        };
     </script>
 </body>
 

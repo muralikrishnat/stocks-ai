@@ -39,14 +39,13 @@ $.ajax({
         fileName: 'investing/stocks-80-100-' + (new Date).getTime() + '-1.json',
         shares: shares
     }),
-    success: () => {},
+    success: () => { },
     contentType: 'application/json',
     dataType: 'json'
 });
 
 
-
-var stocks = [];
+var shares = [];
 $('.resultsStockScreenerTbl').find('tr').each((i, sr) => {
     var $sr = $(sr);
     var name = $sr.find('td[data-column-name="name_trans"]').text().trim();
@@ -70,7 +69,6 @@ $('.resultsStockScreenerTbl').find('tr').each((i, sr) => {
     var performanceProps = ['daily', 'week', 'month', 'ytd', 'year', '3year'];
     var technicalYes = true;
     technocalProps.forEach((t) => {
-
         if ($sr.find('td[data-column-name="' + t + '"]').text().trim() == 'Strong Buy') {
             technicalYes = technicalYes && true;
         } else {
@@ -82,25 +80,69 @@ $('.resultsStockScreenerTbl').find('tr').each((i, sr) => {
         stockProps[p] = $sr.find('td[data-column-name="' + p + '"]').text().trim();
     });
     if (technicalYes && performanceProps) {
-        stocks.push(stockProps);
+        shares.push(stockProps);
     }
 });
-stocks.length;
+var doneSharesCount = 0;
+var checkAllDone = function(){
+    if (shares.length == doneSharesCount) {
+        console.log('investing.com Done!!!!!!!!!!!!!!!!!!!!!!1');
+    }
+};
+
+shares.forEach(s => {
+    var nt = document.createElement('IFRAME');
+    nt.onload = function () {
+        var doc = this.contentDocument || this.contentWindow.document;
+        var hdata = [];
+        if (doc.getElementById('curr_table')) {
+            $('<table>' + doc.getElementById('curr_table').innerHTML + '</table>').find('tbody').find('tr').each(function (i, tr) {
+                var hdate = $(tr).find('td:eq(0)').text().trim();
+                var price = $(tr).find('td:eq(1)').text().trim();
+                var open = $(tr).find('td:eq(2)').text().trim();
+                var high = $(tr).find('td:eq(3)').text().trim();
+                var low = $(tr).find('td:eq(4)').text().trim();
+                var change = $(tr).find('td:eq(6)').text().trim();
+                var className = $(tr).find('td:eq(6)').attr('class');
+                hdata.push({
+                    hdate,
+                    price,
+                    open,
+                    high,
+                    low,
+                    change,
+                    className
+                });
+            });
+        }
+
+        var nseCode = '';
+        if (doc.getElementById('quotes_summary_current_data')) {
+            nseCode = $('<div>' + doc.getElementById('quotes_summary_current_data').innerHTML + '</div>').find('.right').children('div:eq(3)').find('span.elp').text().trim();
+        }
+        s.nseCode = nseCode;
+        s.hdata = hdata;
+        doneSharesCount = doneSharesCount + 1;
+        checkAllDone();
+    };
+    nt.src = s.link + '-historical-data';
+    $('body').append(nt);
+});
 
 
 $('.dataTable').find('tr').each((i, tr) => {
     var price = parseFloat($(tr).find('td:eq(3)').text().trim().replace(/,/g, ''));
-	if (price >= 80 && price <= 100) {} else { $(tr).hide()}
+    if (price >= 80 && price <= 100) { } else { $(tr).hide() }
 });
 
 
 var shares = [];
-$('.dataTable').find('tr').each((i, tr) => {  
+$('.dataTable').find('tr').each((i, tr) => {
     if ($(tr).find('td:eq(0) a').length > 0) {
         shares.push({
             name: $(tr).find('td:eq(0) a').text().trim(),
             link: $(tr).find('td:eq(0) a').attr('href'),
-            code: $(tr).find('td:eq(1)').text().trim() 
+            code: $(tr).find('td:eq(1)').text().trim()
         });
     }
 });
@@ -112,7 +154,7 @@ $.ajax({
         fileName: 'rediff/total-nse/1.json',
         shares: shares
     }),
-    success: () => {},
+    success: () => { },
     contentType: 'application/json',
     dataType: 'json'
 });

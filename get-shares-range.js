@@ -6,7 +6,7 @@ var By = webdriver.By;
 
 var driver = new webdriver.Builder().withCapabilities(webdriver.Capabilities.chrome()).build();
 
-var getShares = function() {
+var getShares = function () {
     $('.popupCloseIcon').click();
     var shares = [];
     $('.resultsStockScreenerTbl').find('tr').each((i, sr) => {
@@ -60,9 +60,9 @@ var sharesWithNseCodes = [];
 var sharesToCheck = [];
 var stepIndex = 0;
 
-var getStocksData = function() {
+var getStocksData = function () {
     var hdata = [];
-    $('.historicalTbl').find('tr').each(function(i, tr) {
+    $('.historicalTbl').find('tr').each(function (i, tr) {
         var hdate = $(tr).find('td:eq(0)').text().trim();
         var price = $(tr).find('td:eq(1)').text().trim();
         var open = $(tr).find('td:eq(2)').text().trim();
@@ -89,38 +89,40 @@ var getStocksData = function() {
     }
     $('body').append('<div class="nse-code">' + JSON.stringify(stockDetails) + '</div>');
 };
-var waitForElementLoad = function() {
-    return driver.findElements(webdriver.By.css('#quotes_summary_current_data')).then(function(result) {
+var waitForElementLoad = function () {
+    return driver.findElements(webdriver.By.css('#quotes_summary_current_data')).then(function (result) {
         return result[0];
     });
 };
 
-var waitForCodeRange = function() {
-    return driver.findElements(webdriver.By.css('.share-80-100')).then(function(result) {
+var waitForCodeRange = function () {
+    return driver.findElements(webdriver.By.css('.share-80-100')).then(function (result) {
         return result[0].getText().then((text) => {
             sharesToCheck = JSON.parse(text.trim());
         });
     });
 };
 
-var waitForCode = function() {
-    return driver.findElements(webdriver.By.css('.nse-code')).then(function(result) {
+var waitForCode = function () {
+    return driver.findElements(webdriver.By.css('.nse-code')).then(function (result) {
         return result[0].getText().then((text) => {
             sharesWithNseCodes.push(JSON.parse(text.trim()));
         });
     });
 };
 
-var getDriverByUrl = function(url) {
-    return driver.get(url).then(waitForElementLoad).then(function() {
+var getDriverByUrl = function (url) {
+    return driver.get(url).then(waitForElementLoad).then(function () {
         return driver.executeScript(getStocksData);
     }).then(waitForCode);
 };
-var pickNextStep = function() {
+var pickNextStep = function () {
     if (sharesToCheck[stepIndex] && sharesToCheck[stepIndex].link) {
         return getDriverByUrl('https://in.investing.com' + sharesToCheck[stepIndex++].link + '-historical-data').then(pickNextStep);
     } else {
-        return {};
+        return new Promise((res, rej) => {
+            res({});
+        });
     }
 };
 
@@ -130,7 +132,7 @@ var sharesToCheckHash = {};
 var sharesInRediff = [];
 var sharesWithMeter = [];
 
-var saveFile = function(filePath, content) {
+var saveFile = function (filePath, content) {
     return new Promise((res, rej) => {
         fs.writeFile(filePath, content, (err) => {
             res({ err });
@@ -138,7 +140,7 @@ var saveFile = function(filePath, content) {
     });
 };
 
-var readFile = function(filePath, hashObj) {
+var readFile = function (filePath, hashObj) {
     return new Promise((res, rej) => {
         fs.readFile(filePath, (err, content) => {
             var filejson = JSON.parse(content.toString());
@@ -147,7 +149,7 @@ var readFile = function(filePath, hashObj) {
         });
     });
 };
-var readFolder = function(fPath) {
+var readFolder = function (fPath) {
     return new Promise((res, rej) => {
         fs.readdir(fPath, (err, files) => {
             res({ err, files });
@@ -156,7 +158,7 @@ var readFolder = function(fPath) {
 };
 
 
-var processRediffSite = function() {
+var processRediffSite = function () {
     var folderPath = path.join(__dirname, '/files/rediff/total-nse');
     return readFolder(folderPath).then(({ err, files }) => {
         return Promise.all(files.map(f => {
@@ -171,37 +173,40 @@ var processRediffSite = function() {
         return {};
     });
 };
-var getDriverByUrlRediff = function(url) {
-    return driver.get(url).then(function() {
-        return driver.findElements(webdriver.By.css('#for_NSE .cmp_meterbox')).then(function(result) {
+var getDriverByUrlRediff = function (url) {
+    return driver.get(url).then(function () {
+        return driver.findElements(webdriver.By.css('#for_NSE .cmp_meterbox')).then(function (result) {
             return result[0];
         });
-    }).then(function() {
-        return driver.executeScript(function() {
+    }).then(function () {
+        return driver.executeScript(function () {
             var stockDetails = {
                 code: $('#for_NSE .grey2.f12').text().trim(),
+                group: $('#for_BSE .grey2.f12').text().trim(),
                 meter: $('#for_NSE .cmp_meterbox').find('img').attr('src'),
                 rlink: window.location.href
             };
             $('body').append('<div class="stock-data">' + JSON.stringify(stockDetails) + ' </div>');
         });
-    }).then(function() {
-        return driver.findElements(webdriver.By.css('.stock-data')).then(function(result) {
+    }).then(function () {
+        return driver.findElements(webdriver.By.css('.stock-data')).then(function (result) {
             return result[0].getText().then((text) => {
                 sharesWithMeter.push(JSON.parse(text.trim()));
             });
         });
     });
 };
-var pickNextStepRediff = function() {
+var pickNextStepRediff = function () {
     if (foundShares[stepIndex] && foundShares[stepIndex].rshare) {
         return getDriverByUrlRediff(foundShares[stepIndex++].rshare.link).then(pickNextStepRediff);
     } else {
-        return {};
+        return new Promise((res, rej) => {
+            res({});
+        });
     }
 };
 var foundShares = [];
-var compareWithRediff = function() {
+var compareWithRediff = function () {
     return pickNextStepRediff().then(() => {
         return {};
     });
@@ -209,12 +214,29 @@ var compareWithRediff = function() {
 var from = 40,
     to = 50,
     page = 1;
+
+if (process.argv) {
+    process.argv.forEach((a) => {
+        if (a.split('=').length > 0 && a.split('=')[0] == 'from') {
+            from = parseInt(a.split('=')[1]);
+        }
+
+        if (a.split('=').length > 0 && a.split('=')[0] == 'to') {
+            to = parseInt(a.split('=')[1]);
+        }
+
+        if (a.split('=').length > 0 && a.split('=')[0] == 'page') {
+            page = parseInt(a.split('=')[1]);
+        }
+    });
+}
 var tDate = new Date();
-var fileName = 'final-stocks-' + from + '-' + to + '-' + page + '-' + (tDate.getDay() + '-' + tDate.getMonth() + '-' + tDate.getFullYear()) + '.json';
+var fileName = 'final-stocks-' + from + '-' + to + '-' + page + '-tmp.json';
+fileName = '/' + tDate.getFullYear() + '/' + tDate.getMonth() + '/' + tDate.getDate() + '/' + fileName;
 try {
-    driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|industry::a|equityType::a|exchange::46|last::' + from + ',' + to + '%3Ceq_market_cap;' + page).then(function() {
+    driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|industry::a|equityType::a|exchange::46|last::' + from + ',' + to + '%3Ceq_market_cap;' + page).then(function () {
         return driver.executeScript(getShares);
-    }).then(waitForCodeRange).then(function() {
+    }).then(waitForCodeRange).then(function () {
         return pickNextStep().then(() => {
             return {};
         });
