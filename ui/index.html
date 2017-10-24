@@ -52,9 +52,9 @@
 
 <body class="p-5">
     <div>
-        <div> /kitto-results/2017/8/22/final-stocks-40-60-1-tmp.json</div>
+        <div> /kitto-results/2017/8/22/final-stocks-40-60-1.json</div>
         <div>
-            <input value="/kitto-results/2017/8/22/final-stocks-40-60-1-tmp.json" style="width:400px;padding:5px;" type="text" class="file-to-fetch" /> 
+            <input value="/kitto-results/2017/8/22/final-stocks-40-60-1.json" style="width:400px;padding:5px;" type="text" class="file-to-fetch" />
             <input type="button" onclick="fetchSharesFromFile()" value=" Fetch Shares " />
             <input type="button" onclick="clearData()" value=" Clear Shares " />
         </div>
@@ -73,10 +73,15 @@
                 contentType: 'application/json',
                 dataType: 'json'
             }).then((resp) => {
-                if (sharesHashObj) {
-                    sharesHashObj[filePath] = resp.shares;
+                if (resp.shares) {
+                    if (sharesHashObj) {
+                        sharesHashObj[filePath] = resp.shares;
+                    }
+                    return resp.shares;
+                } else {
+                    return resp;
                 }
-                return resp.shares;
+
             })
         };
         var shares = [];
@@ -115,7 +120,7 @@
                         $tr.append('<td> <img src="' + s.meter + '" /></td>');
                         $tr.append('<td>' + s.name + '</td>');
                         $tr.append('<td class="p-5 bold">' + s.lastPrice + '</td>');
-                        if (s.hdata) {
+                        if (s.hdata && s.hdata.length > 0) {
                             for (var i = 0; i < 10; i++) {
                                 $tr.append('<td class="p-5 ' + s.hdata[i]['className'] + '">' + s.hdata[i]['change'] + '</td>');
                             }
@@ -146,6 +151,34 @@
         var clearData = () => {
             $('.shares-to-check').html('');
         };
+
+
+        var myWorker = new Worker('js/worker.js');
+        var workManager = new(function WC() {
+            var workerHash = {};
+            myWorker.onmessage = function(e) {
+                if (workerHash[e.data.timestamp]) {
+                    workerHash[e.data.timestamp].promiseFn(e.data)
+                }
+            };
+            this.do = function(workerData) {
+                return new Promise((res, rej) => {
+                    workerHash[workerData.timestamp] = {
+                        promiseFn: res
+                    }
+                    myWorker.postMessage(workerData);
+                });
+            }
+        })();
+
+
+        // workManager.do({
+        //     timestamp: '' + (new Date).getTime(),
+        //     action: 'html',
+        //     shares: shares
+        // }).then(function() {
+
+        // });
     </script>
 </body>
 

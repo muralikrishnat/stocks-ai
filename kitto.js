@@ -102,7 +102,7 @@ var processInvestingComShares = function() {
 
         performanceProps.forEach((p) => {
             stockProps[p] = $sr.find('td[data-column-name="' + p + '"]').text().trim();
-            if (stockProps[p].indexOf('-') > 0) {
+            if (stockProps[p].indexOf('-') < 0) {
                 perfomanceYes = perfomanceYes && true;
             } else {
                 perfomanceYes = false;
@@ -299,13 +299,13 @@ driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|in
                                 top: '96px',
                                 left: '7%',
                                 width: '500px',
-                                backgroundColor: 'linear-gradient(to bottom right, #303030 0%, #262626 100%)',
+                                backgroundColor: '#303030',
                                 color: 'white',
                                 zIndex: '9999999',
                                 fontWeight: 'bold',
                                 fontSize: '16px',
                                 padding: '20px',
-                                borderRadius: '15px;'
+                                borderRadius: '15px'
                             });
                             $('body').append($logger);
                         }
@@ -367,7 +367,7 @@ driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|in
                     };
 
                     var tDate = new Date();
-                    var fileName = 'final-stocks-' + from + '-' + to + '-' + page + '.json';
+                    var fileName = 'final-stocks-' + from + '-' + to + '-' + page + '-' + tDate.getHours() + '-' + tDate.getMinutes() + '-' + tDate.getSeconds() + '.json';
                     fileName = '/' + tDate.getFullYear() + '/' + tDate.getMonth() + '/' + tDate.getDate() + '/' + fileName;
                     var filePath = path.join(__dirname, 'files/kitto-results/', fileName);
                     writeFile(filePath, JSON.stringify(fileContent), (err) => {
@@ -384,10 +384,10 @@ driver.get('https://in.investing.com/stock-screener/?sp=country::14|sector::a|in
             } else {
                 console.log('Done Process!!!!!!!');
             }
-            //driver.close();
+            driver.close();
         });
     } else {
         logTime('best shares not found');
-        //driver.close();
+        driver.close();
     }
 })
